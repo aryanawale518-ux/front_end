@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<style>
+  :root{
+    --body-metal-1: #3a3a3d;
+    --body-metal-2: #29292b;
+    --lcd-bg: #b9c99a;
+    --lcd-bg-2: #a8ba86;
+    --lcd-text: #26311c;
+    --lcd-ghost: rgba(38,49,28,0.18);
+    --key-face: #464649;
+    --key-face-hi: #55555a;
+    --key-shadow: #1c1c1e;
+    --key-text: #f1efe8;
+    --op-face: #c1652f;
+    --op-face-hi: #d97a41;
+    --op-shadow: #7a3814;
+    --eq-face: #4f7a52;
+    --eq-face-hi: #628f65;
+    --eq-shadow: #274228;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 30% 20%, #4a4a4d, #1a1a1c 70%);
+    padding:24px;
+  }
+
+  .device{
+    width:340px;
+    background:linear-gradient(160deg, var(--body-metal-1), var(--body-metal-2));
+    border-radius:22px;
+    padding:22px 20px 26px;
+    box-shadow:
+      0 25px 50px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -2px 4px rgba(0,0,0,0.4);
+    position:relative;
+  }
+
+  .brand{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:0 4px 10px;
+    color:#9a9a9d;
+    letter-spacing:2px;
+    font-size:11px;
+    text-transform:uppercase;
+  }
+  .brand span:first-child{
+    color:#d8d8d6;
+    font-weight:bold;
+    font-size:13px;
+  }
+
+  .screen{
+    background:linear-gradient(155deg, var(--lcd-bg), var(--lcd-bg-2));
+    border-radius:10px;
+    padding:18px 16px 14px;
+    margin-bottom:18px;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.35),
+      inset 0 -1px 0 rgba(255,255,255,0.15);
+    position:relative;
+    overflow:hidden;
+  }
+  .screen::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.03) 0px,
+      rgba(0,0,0,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+  }
+
+  .expression{
+    min-height:18px;
+    text-align:right;
+    font-size:14px;
+    color:var(--lcd-ghost);
+    letter-spacing:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .result{
+    text-align:right;
+    font-size:40px;
+    line-height:1.2;
+    color:var(--lcd-text);
+    font-weight:bold;
+    letter-spacing:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+  }
+
+  button{
+    border:none;
+    outline:none;
+    border-radius:10px;
+    padding:16px 0;
+    font-size:17px;
+    font-family:inherit;
+    font-weight:bold;
+    cursor:pointer;
+    color:var(--key-text);
+    background:linear-gradient(160deg, var(--key-face-hi), var(--key-face));
+    box-shadow:
+      0 4px 0 var(--key-shadow),
+      0 6px 8px rgba(0,0,0,0.35);
+    transition: transform .04s ease, box-shadow .04s ease, filter .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:hover{ filter:brightness(1.08); }
+  button:active,
+  button.pressed{
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 var(--key-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+  }
+
+  button.op{
+    background:linear-gradient(160deg, var(--op-face-hi), var(--op-face));
+    box-shadow:
+      0 4px 0 var(--op-shadow),
+      0 6px 8px rgba(0,0,0,0.35);
+  }
+  button.op:active, button.op.pressed{
+    box-shadow: 0 1px 0 var(--op-shadow), 0 2px 4px rgba(0,0,0,0.35);
+  }
+
+  button.func{
+    color:#2b2b2b;
+    background:linear-gradient(160deg, #cfcfcb, #b7b7b2);
+    box-shadow:
+      0 4px 0 #7d7d78,
+      0 6px 8px rgba(0,0,0,0.35);
+  }
+  button.func:active, button.func.pressed{
+    box-shadow: 0 1px 0 #7d7d78, 0 2px 4px rgba(0,0,0,0.35);
+  }
+
+  button.equals{
+    grid-column: span 2;
+    background:linear-gradient(160deg, var(--eq-face-hi), var(--eq-face));
+    box-shadow:
+      0 4px 0 var(--eq-shadow),
+      0 6px 8px rgba(0,0,0,0.35);
+    font-size:19px;
+  }
+  button.equals:active, button.equals.pressed{
+    box-shadow: 0 1px 0 var(--eq-shadow), 0 2px 4px rgba(0,0,0,0.35);
+  }
+
+  button.zero{ grid-column: span 2; }
+
+  .hint{
+    text-align:center;
+    color:#77777a;
+    font-size:10.5px;
+    letter-spacing:1px;
+    margin-top:16px;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="brand"><span>CALC · 86</span><span>SOLAR</span></div>
+
+  <div class="screen">
+    <div class="expression" id="expression">&nbsp;</div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <div class="keys">
+    <button class="func" data-action="clear">AC</button>
+    <button class="func" data-action="backspace">⌫</button>
+    <button class="func" data-action="percent">%</button>
+    <button class="op" data-action="divide">÷</button>
+
+    <button data-num="7">7</button>
+    <button data-num="8">8</button>
+    <button data-num="9">9</button>
+    <button class="op" data-action="multiply">×</button>
+
+    <button data-num="4">4</button>
+    <button data-num="5">5</button>
+    <button data-num="6">6</button>
+    <button class="op" data-action="subtract">−</button>
+
+    <button data-num="1">1</button>
+    <button data-num="2">2</button>
+    <button data-num="3">3</button>
+    <button class="op" data-action="add">+</button>
+
+    <button class="func" data-action="sign">±</button>
+    <button class="zero" data-num="0">0</button>
+    <button data-action="decimal">.</button>
+    <button class="equals" data-action="equals">=</button>
+  </div>
+
+  <div class="hint">Keyboard supported · Esc clears</div>
+</div>
+
+<script>
+(function(){
+  const expressionEl = document.getElementById('expression');
+  const resultEl = document.getElementById('result');
+
+  let current = '0';        // number currently being typed / shown
+  let previous = null;      // stored operand
+  let operator = null;      // pending operator symbol
+  let justEvaluated = false; // true right after "=" was pressed
+  let expressionText = '';  // top ghost line
+
+  const MAX_DIGITS = 12;
+
+  function formatNumber(numStr){
+    if (numStr === 'Error') return numStr;
+    const num = Number(numStr);
+    if (!isFinite(num)) return 'Error';
+
+    // Trim to a sane number of significant digits for display
+    let display;
+    if (Math.abs(num) >= 1e12 || (Math.abs(num) < 1e-9 && num !== 0)) {
+      display = num.toExponential(5);
+    } else {
+      display = num.toString();
+      if (display.replace(/[-.]/g,'').length > MAX_DIGITS) {
+        display = parseFloat(num.toPrecision(MAX_DIGITS)).toString();
+      }
+    }
+    return display;
+  }
+
+  function updateScreen(){
+    resultEl.textContent = formatNumber(current);
+    expressionEl.textContent = expressionText || '\u00A0';
+  }
+
+  function opSymbol(action){
+    return { add:'+', subtract:'−', multiply:'×', divide:'÷' }[action] || '';
+  }
+
+  function inputDigit(d){
+    if (justEvaluated){
+      current = '0';
+      expressionText = '';
+      justEvaluated = false;
+    }
+    if (current.replace(/[-.]/g,'').length >= MAX_DIGITS) return;
+    current = (current === '0') ? d : current + d;
+    updateScreen();
+  }
+
+  function inputDecimal(){
+    if (justEvaluated){
+      current = '0';
+      expressionText = '';
+      justEvaluated = false;
+    }
+    if (!current.includes('.')) current += '.';
+    updateScreen();
+  }
+
+  function clearAll(){
+    current = '0';
+    previous = null;
+    operator = null;
+    justEvaluated = false;
+    expressionText = '';
+    updateScreen();
+  }
+
+  function backspace(){
+    if (justEvaluated) { clearAll(); return; }
+    current = current.length > 1 ? current.slice(0, -1) : '0';
+    updateScreen();
+  }
+
+  function toggleSign(){
+    if (current === '0') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    updateScreen();
+  }
+
+  function percent(){
+    current = (parseFloat(current) / 100).toString();
+    updateScreen();
+  }
+
+  function compute(a, b, op){
+    a = parseFloat(a); b = parseFloat(b);
+    switch(op){
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? NaN : a / b;
+      default: return b;
+    }
+  }
+
+  function setOperator(action){
+    const sym = opSymbol(action);
+    if (operator && previous !== null && !justEvaluated){
+      // chain operations: evaluate pending first
+      const res = compute(previous, current, operator);
+      current = isFinite(res) ? res.toString() : 'Error';
+    }
+    previous = current;
+    operator = sym;
+    expressionText = formatNumber(previous) + ' ' + sym;
+    justEvaluated = false;
+    current = '0';
+    updateScreen();
+    // reset current display placeholder to previous until next digit typed
+    resultEl.textContent = formatNumber(previous);
+  }
+
+  function equals(){
+    if (operator === null || previous === null) return;
+    const res = compute(previous, current, operator);
+    expressionText = formatNumber(previous) + ' ' + operator + ' ' + formatNumber(current) + ' =';
+    current = isFinite(res) ? res.toString() : 'Error';
+    previous = null;
+    operator = null;
+    justEvaluated = true;
+    updateScreen();
+  }
+
+  function flashKey(el){
+    if (!el) return;
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 90);
+  }
+
+  document.querySelector('.keys').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    flashKey(btn);
+
+    if (btn.dataset.num !== undefined){
+      inputDigit(btn.dataset.num);
+      return;
+    }
+    switch(btn.dataset.action){
+      case 'clear': clearAll(); break;
+      case 'backspace': backspace(); break;
+      case 'sign': toggleSign(); break;
+      case 'percent': percent(); break;
+      case 'decimal': inputDecimal(); break;
+      case 'add':
+      case 'subtract':
+      case 'multiply':
+      case 'divide':
+        setOperator(btn.dataset.action);
+        break;
+      case 'equals': equals(); break;
+    }
+  });
+
+  const keyMap = {
+    '+':'add', '-':'subtract', '*':'multiply', '/':'divide',
+    'Enter':'equals', '=':'equals', 'Escape':'clear', 'Backspace':'backspace',
+    '%':'percent'
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9'){
+      inputDigit(e.key);
+      highlightBySelector(`[data-num="${e.key}"]`);
+      return;
+    }
+    if (e.key === '.'){
+      inputDecimal();
+      highlightBySelector('[data-action="decimal"]');
+      return;
+    }
+    const action = keyMap[e.key];
+    if (!action) return;
+    e.preventDefault();
+    switch(action){
+      case 'clear': clearAll(); break;
+      case 'backspace': backspace(); break;
+      case 'percent': percent(); break;
+      case 'equals': equals(); break;
+      default: setOperator(action);
+    }
+    const opSel = { add:'add', subtract:'subtract', multiply:'multiply', divide:'divide' }[action];
+    highlightBySelector(`[data-action="${action}"]`);
+  });
+
+  function highlightBySelector(sel){
+    const el = document.querySelector(sel);
+    flashKey(el);
+  }
+
+  updateScreen();
+})();
+</script>
+
+</body>
+</html>

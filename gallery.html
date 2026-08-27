@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Image Gallery</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #777;
+        }
+
+        /* Filter Buttons */
+        .filters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px auto 30px;
+            padding: 0 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #ddd;
+            color: #333;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #333;
+            color: white;
+        }
+
+        /* Gallery */
+        .gallery {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+            background: white;
+
+            transition: transform 0.3s ease,
+                        box-shadow 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.08);
+        }
+
+        /* Image Overlay */
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+
+            padding: 15px;
+
+            background: linear-gradient(
+                transparent,
+                rgba(0, 0, 0, 0.8)
+            );
+
+            color: white;
+
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .overlay {
+            opacity: 1;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+
+            position: fixed;
+            z-index: 1000;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.9);
+
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 85%;
+            max-height: 80%;
+
+            border-radius: 10px;
+
+            animation: zoomIn 0.3s ease;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Close Button */
+        .close {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+
+            color: white;
+            font-size: 40px;
+
+            cursor: pointer;
+        }
+
+        /* Navigation Buttons */
+        .prev,
+        .next {
+            position: absolute;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+
+            border: none;
+            border-radius: 50%;
+
+            width: 50px;
+            height: 50px;
+
+            font-size: 25px;
+
+            cursor: pointer;
+
+            transition: background 0.3s ease;
+        }
+
+        .prev:hover,
+        .next:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .prev {
+            left: 30px;
+        }
+
+        .next {
+            right: 30px;
+        }
+
+        /* Responsive Design */
+
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .gallery-item img {
+                height: 200px;
+            }
+
+            header h1 {
+                font-size: 28px;
+            }
+
+            .prev {
+                left: 10px;
+            }
+
+            .next {
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-item img {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>My Image Gallery</h1>
+        <p>Explore beautiful images by category</p>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">
+            All
+        </button>
+
+        <button class="filter-btn" data-filter="nature">
+            Nature
+        </button>
+
+        <button class="filter-btn" data-filter="city">
+            City
+        </button>
+
+        <button class="filter-btn" data-filter="animals">
+            Animals
+        </button>
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery">
+
+        <div class="gallery-item" data-category="nature">
+            <img
+                src="https://images.unsplash.com/photo-1500534623283-312aade485b7"
+                alt="Nature"
+            >
+            <div class="overlay">Nature</div>
+        </div>
+
+        <div class="gallery-item" data-category="city">
+            <img
+                src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df"
+                alt="City"
+            >
+            <div class="overlay">City</div>
+        </div>
+
+        <div class="gallery-item" data-category="animals">
+            <img
+                src="https://images.unsplash.com/photo-1546182990-dffeafbe841d"
+                alt="Animal"
+            >
+            <div class="overlay">Animals</div>
+        </div>
+
+        <div class="gallery-item" data-category="nature">
+            <img
+                src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e"
+                alt="Forest"
+            >
+            <div class="overlay">Nature</div>
+        </div>
+
+        <div class="gallery-item" data-category="city">
+            <img
+                src="https://images.unsplash.com/photo-1444723121867-7a241cacace9"
+                alt="City"
+            >
+            <div class="overlay">City</div>
+        </div>
+
+        <div class="gallery-item" data-category="animals">
+            <img
+                src="https://images.unsplash.com/photo-1552053831-71594a27632d"
+                alt="Dog"
+            >
+            <div class="overlay">Animals</div>
+        </div>
+
+        <div class="gallery-item" data-category="nature">
+            <img
+                src="https://images.unsplash.com/photo-1501854140801-50d01698950b"
+                alt="Mountain"
+            >
+            <div class="overlay">Nature</div>
+        </div>
+
+        <div class="gallery-item" data-category="city">
+            <img
+                src="https://images.unsplash.com/photo-1519501025264-65ba15a82390"
+                alt="City"
+            >
+            <div class="overlay">City</div>
+        </div>
+
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+
+        <span class="close" id="close">&times;</span>
+
+        <button class="prev" id="prev">&#10094;</button>
+
+        <img id="lightbox-img" src="" alt="Full Image">
+
+        <button class="next" id="next">&#10095;</button>
+
+    </div>
+
+    <script>
+
+        // Gallery Elements
+        const galleryItems =
+            document.querySelectorAll(".gallery-item");
+
+        const filterButtons =
+            document.querySelectorAll(".filter-btn");
+
+        // Lightbox Elements
+        const lightbox =
+            document.getElementById("lightbox");
+
+        const lightboxImg =
+            document.getElementById("lightbox-img");
+
+        const closeBtn =
+            document.getElementById("close");
+
+        const prevBtn =
+            document.getElementById("prev");
+
+        const nextBtn =
+            document.getElementById("next");
+
+        let currentIndex = 0;
+
+        // Store visible images
+        let visibleItems = Array.from(galleryItems);
+
+
+        // -------------------------------
+        // FILTER FUNCTION
+        // -------------------------------
+
+        filterButtons.forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                // Remove active class
+                filterButtons.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+
+                // Add active class
+                button.classList.add("active");
+
+                const filter =
+                    button.getAttribute("data-filter");
+
+                visibleItems = [];
+
+                galleryItems.forEach(item => {
+
+                    const category =
+                        item.getAttribute("data-category");
+
+                    if (
+                        filter === "all" ||
+                        category === filter
+                    ) {
+
+                        item.style.display = "block";
+
+                        visibleItems.push(item);
+
+                    } else {
+
+                        item.style.display = "none";
+                    }
+                });
+            });
+
+        });
+
+
+        // -------------------------------
+        // OPEN LIGHTBOX
+        // -------------------------------
+
+        galleryItems.forEach(item => {
+
+            item.addEventListener("click", () => {
+
+                visibleItems =
+                    Array.from(galleryItems)
+                    .filter(item =>
+                        item.style.display !== "none"
+                    );
+
+                currentIndex =
+                    visibleItems.indexOf(item);
+
+                showImage();
+
+                lightbox.classList.add("active");
+            });
+
+        });
+
+
+        // -------------------------------
+        // SHOW IMAGE
+        // -------------------------------
+
+        function showImage() {
+
+            const image =
+                visibleItems[currentIndex]
+                .querySelector("img");
+
+            lightboxImg.src = image.src;
+
+            lightboxImg.alt = image.alt;
+        }
+
+
+        // -------------------------------
+        // NEXT IMAGE
+        // -------------------------------
+
+        nextBtn.addEventListener("click", () => {
+
+            currentIndex++;
+
+            if (currentIndex >= visibleItems.length) {
+                currentIndex = 0;
+            }
+
+            showImage();
+        });
+
+
+        // -------------------------------
+        // PREVIOUS IMAGE
+        // -------------------------------
+
+        prevBtn.addEventListener("click", () => {
+
+            currentIndex--;
+
+            if (currentIndex < 0) {
+                currentIndex = visibleItems.length - 1;
+            }
+
+            showImage();
+        });
+
+
+        // -------------------------------
+        // CLOSE LIGHTBOX
+        // -------------------------------
+
+        closeBtn.addEventListener("click", () => {
+
+            lightbox.classList.remove("active");
+
+        });
+
+
+        // Close when clicking outside image
+        lightbox.addEventListener("click", (event) => {
+
+            if (event.target === lightbox) {
+
+                lightbox.classList.remove("active");
+
+            }
+
+        });
+
+
+        // -------------------------------
+        // KEYBOARD NAVIGATION
+        // -------------------------------
+
+        document.addEventListener("keydown", (event) => {
+
+            if (!lightbox.classList.contains("active")) {
+                return;
+            }
+
+            if (event.key === "ArrowRight") {
+                nextBtn.click();
+            }
+
+            if (event.key === "ArrowLeft") {
+                prevBtn.click();
+            }
+
+            if (event.key === "Escape") {
+                closeBtn.click();
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
